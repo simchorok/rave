@@ -127,7 +127,8 @@ body[data-theme=desert] .hud{text-shadow:0 1px 8px rgba(40,24,8,.7)} /* HUD text
 /* entry steps: 1 = theme carousel (cards snap to centre, neighbours peek in), 2 = character pick with a compact title */
 .step{width:100%;display:flex;flex-direction:column;align-items:center;gap:14px;animation:fadeUp .5s both}
 .carousel{width:100%;display:flex;align-items:center;gap:8px}
-.track{flex:1;min-width:0;display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;padding:4px 7%;scroll-padding:0 7%}
+.track{flex:1;min-width:0;display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;padding:4px 0}
+.track::before,.track::after{content:'';flex:0 0 max(0px,calc(7% - 12px))} /* spacers: first and last card can sit dead centre */
 .track::-webkit-scrollbar{display:none}
 .theme{flex:0 0 86%;scroll-snap-align:center;position:relative;aspect-ratio:16/9;min-height:150px;border:1px solid var(--line);cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;padding:16px 18px;text-align:left;color:var(--bone);overflow:hidden;font:inherit;transition:border-color .2s,transform .2s,opacity .2s}
 .theme::after{content:"";position:absolute;inset:0;background:radial-gradient(130% 90% at 50% 40%,transparent 50%,rgba(0,0,0,.65));pointer-events:none}
@@ -158,7 +159,7 @@ body[data-theme=desert] .hud{text-shadow:0 1px 8px rgba(40,24,8,.7)} /* HUD text
 #gate[data-step=look] .title{flex:0 0 auto;min-height:0;padding:min(4vh,32px) 0 18px}
 #gate[data-step=look] .title h1{font-size:clamp(64px,13vw,170px)}
 #gate[data-step=look] .tagline{font-family:var(--f-mono);font-weight:500;font-size:clamp(11px,1.3vw,14px);letter-spacing:.12em;color:var(--dim)}
-@media (max-width:460px){.nav{display:none}.track{padding:4px 5%}.theme{flex-basis:90%}}
+@media (max-width:460px){.nav{display:none}.track::before,.track::after{flex-basis:max(0px,calc(5% - 12px))}.theme{flex-basis:90%}}
 @media (max-width:600px){#gate[data-step=theme] .title h1{font-size:38vw;letter-spacing:.02em}#sndbtn{width:56px;height:56px;font-size:32px}.theme{aspect-ratio:4/3}.theme h2{font-size:clamp(46px,14vw,60px)}.theme .sub{font-size:14px;line-height:1.5}
   #gate[data-step=look] .title{padding-top:58px}#gate[data-step=look] .title h1{font-size:21vw}#gate[data-step=look] .tagline{font-size:13px}
   .back{font-size:14px}.tip{font-size:15px}.tip b{font-size:12px}.seg button{font-size:15px;padding:11px 30px}
@@ -1336,20 +1337,22 @@ let beatMap=null,beatIdx=0,beatOffset=0,decks=null,lead=null,fading=false,nextId
 const mapCache={};
 function mapBeats(src){
   return mapCache[src]||(mapCache[src]=(async()=>{
-    const ab=await actx.decodeAudioData(await (await fetch(src)).arrayBuffer());
-    const sr=ab.sampleRate,ch=ab.getChannelData(0),R=200,hop=Math.round(sr/R),n=Math.floor(ch.length/hop);
+    // decode at a low sample rate (kicks live under 150 Hz): a full-rate decode of a 4-minute track is ~80 MB, enough to crash a phone
+    const buf=await (await fetch(src)).arrayBuffer(),OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+    let ab;try{ab=await new OAC(1,1,22050).decodeAudioData(buf.slice(0));}catch(e){ab=await actx.decodeAudioData(buf);}
+    const sr=ab.sampleRate,ch=ab.getChannelData(0),hop=Math.round(sr/200),R=sr/hop,n=Math.floor(ch.length/hop);
     const on=new Float32Array(n);let lp=0,prev=0;const a=1-Math.exp(-2*Math.PI*150/sr); // low-band energy rise = kick onset
     for(let i=0;i<n;i++){let e=0;for(let j=0;j<hop;j++){lp+=a*(ch[i*hop+j]-lp);e+=lp*lp;}on[i]=Math.max(0,e-prev);prev=e;}
     const P=new Float64Array(n+1);for(let i=0;i<n;i++)P[i+1]=P[i]+on[i];
     const pk=[];
-    for(let i=3;i<n-3;i++){const lo=Math.max(0,i-R/2),hi=Math.min(n,i+R/2),mean=(P[hi]-P[lo])/(hi-lo);
+    for(let i=3;i<n-3;i++){const lo=Math.max(0,i-100),hi=Math.min(n,i+100),mean=(P[hi]-P[lo])/(hi-lo);
       if(on[i]>mean*2&&on[i]>=on[i-1]&&on[i]>=on[i+1]&&on[i]>=on[i-2]&&on[i]>=on[i+2]){
         if(pk.length&&i-pk[pk.length-1]<.28*R){if(on[i]>on[pk[pk.length-1]])pk[pk.length-1]=i;}else pk.push(i);}}
     if(pk.length<8)return null;
     const gaps=pk.slice(1).map((v,i)=>v-pk[i]).sort((x,y)=>x-y),med=gaps[gaps.length>>1];
     const beats=[pk[0]/R];
     for(let i=1;i<pk.length;i++){const g=pk[i]-pk[i-1],k=Math.round(g/med);for(let j=1;j<k;j++)beats.push((pk[i-1]+g*j/k)/R);if(k>=1)beats.push(pk[i]/R);} // fill missed kicks
-    return {beats,bpm:60*R/med};
+    return {beats,bpm:60*(beats.length-1)/(beats[beats.length-1]-beats[0])}; // tempo over the whole track: steadier than the median gap
   })().catch(e=>{console.warn('[beats]',e);return null;}));
 }
 function makeDeck(){
@@ -1377,7 +1380,7 @@ function mappedBeat(){ // beats passed + fraction into the current one, from the
   const a=b[beatIdx],z=beatIdx<b.length-1?b[beatIdx+1]:a+.39;
   return beatOffset+beatIdx+clamp((t-a)/(z-a),0,.999);
 }
-function nextTrack(){const s=PLAYLIST[nextIdx];nextIdx=(nextIdx+1)%PLAYLIST.length;return s;}
+function nextTrack(){const s=PLAYLIST[nextIdx];nextIdx=(nextIdx+1)%PLAYLIST.length;mapBeats(PLAYLIST[nextIdx]);return s;} // analyse the one after next while this one plays
 function startMusic(){
   initAudio();actx.resume();stopSynth();
   { // walking in: ~7 s from muffled and faint to full
@@ -1386,7 +1389,8 @@ function startMusic(){
     entryLP.frequency.setValueAtTime(280,t);entryLP.frequency.exponentialRampToValueAtTime(20000,t+8);
   }
   PLAYLIST=PLAYLISTS[TH]||PLAYLISTS.halle;nextIdx=1%PLAYLIST.length;
-  if(!decks){decks=[makeDeck(),makeDeck()];PLAYLIST.forEach(mapBeats);} // analyse every track up front so mixes start on time
+  if(!decks){decks=[makeDeck(),makeDeck()];}
+  mapBeats(PLAYLIST[0]);mapBeats(PLAYLIST[1%PLAYLIST.length]); // only the current and next track up front (all at once was too much memory for phones)
   const d=decks[0];loadDeck(d,PLAYLIST[0]);d.g.gain.value=1;setLead(d);
   return d.el.play().then(()=>{t0=actx.currentTime;}).catch(()=>{$('#bpm').textContent=BPM+' BPM';startSynth();});
 }
