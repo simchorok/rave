@@ -1326,8 +1326,9 @@ function startSynth(){initAudio();if(actx.state==='suspended')actx.resume();if(s
 function stopSynth(){synthOn=false;clearInterval(schedTimer);}
 // house playlist on two decks, mixed like a DJ: beat-aligned, tempo-matched, equal-power crossfade with a bass swap.
 // fileEl / beatMap always point at the lead deck (the one the room dances to)
-const PLAYLISTS={halle:['music/schranz-loop.m4a','music/die-welt-ist-verrueckt.m4a','music/wer-ist-die-irre.m4a'],
-  desert:['music/midnight-ritual.m4a','music/meen-el-majnuna.m4a','music/midnight-ritual-2.m4a','music/midnight-ceremony.m4a']}; // each theme plays its own tracks, DJ-mixed one into the next
+const PLAYLISTS={ // music/<theme folder>/<play order>-<name>: the folder order is the playlist order
+  halle:['music/01-halle/01-schranz-loop.m4a','music/01-halle/02-die-welt-ist-verrueckt.m4a','music/01-halle/03-wer-ist-die-irre.m4a'],
+  desert:['music/02-wueste/01-midnight-ritual.m4a','music/02-wueste/02-meen-el-majnuna.m4a','music/02-wueste/03-sahara-rite.m4a','music/02-wueste/04-midnight-ritual-2.m4a','music/02-wueste/05-midnight-ceremony.m4a']}; // each theme plays its own tracks, DJ-mixed one into the next
 let PLAYLIST=PLAYLISTS.halle;
 let beatMap=null,beatIdx=0,beatOffset=0,decks=null,lead=null,fading=false,nextIdx=1;
 // kick map: scan the whole track once for kick times, so dancers and fire follow the real (drifting) tempo by playback time,
@@ -1667,7 +1668,7 @@ document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
 renderLooks();syncGo();
 
 /* ---------- landing music: off by default, the speaker button (top right) turns it on / off ---------- */
-const landing=new Audio('music/concrete-hall.m4a');landing.loop=true;landing.volume=0;
+const landing=new Audio('music/00-landing/concrete-hall.m4a');landing.loop=true;landing.volume=0;
 function fadeVol(el,to,ms,done){const from=el.volume,t0=performance.now(),tok=el._fade=(el._fade||0)+1; // a newer fade cancels this one
   const step=()=>{if(el._fade!==tok)return;const k=Math.min(1,(performance.now()-t0)/ms);el.volume=from+(to-from)*k;if(k<1)requestAnimationFrame(step);else if(done)done();};step();}
 let landingOn=false;
