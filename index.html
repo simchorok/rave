@@ -19,7 +19,7 @@
 #loader b{font-family:var(--f-display);font-weight:900;font-size:clamp(64px,14vw,150px);line-height:.85;letter-spacing:.06em;color:var(--bone);animation:lpulse 1.6s ease-in-out infinite}
 @keyframes lpulse{50%{opacity:.45}}
 .lbar{width:min(260px,62vw);height:3px;background:rgba(236,230,220,.12);overflow:hidden}
-.lbar i{display:block;height:100%;width:0;background:#e0201a;transition:width .25s}
+.lbar i{display:block;height:100%;width:0;background:var(--ember);transition:width .25s}
 #lpct{font-family:var(--f-mono);font-size:12px;letter-spacing:.2em;color:var(--dim)}
 @media (prefers-reduced-motion:reduce){#loader b{animation:none}}
 html,body{height:100%;margin:0;background:var(--ink);color:var(--bone);overflow:hidden;font-family:var(--f-body);-webkit-tap-highlight-color:transparent}
@@ -81,28 +81,32 @@ body[data-theme=desert] .hud{text-shadow:0 1px 8px rgba(40,24,8,.7)} /* HUD text
 
 /* entry gate: game title screen. Near-black over the live hall, huge centred title, short dock at the bottom */
 #gate{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;overflow:auto;text-align:center;
-  background:radial-gradient(120% 90% at 50% 50%,rgba(0,0,0,.82),rgba(0,0,0,.97) 70%);
+  background:radial-gradient(120% 90% at 50% 50%,rgba(10,5,2,.78),rgba(6,3,1,.95) 70%);
   backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
   padding:calc(24px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+#fog{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none} /* dark smoke lit only by the neon sign */
 .title{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:min(40vh,340px)}
 .title h1{position:relative;margin:0;font-family:var(--f-display);font-weight:900;font-size:clamp(84px,17vw,240px);line-height:.85;letter-spacing:.06em;white-space:nowrap;
-  color:var(--bone);text-shadow:-3px 0 rgba(255,30,30,.55),3px 0 rgba(60,200,255,.35),0 0 60px rgba(255,255,255,.08);animation:titleIn 1.4s cubic-bezier(.2,.7,.2,1) both}
-.title h1 em{font-style:normal;color:#e0201a;text-shadow:-3px 0 rgba(255,60,40,.6),3px 0 rgba(60,200,255,.25),0 0 40px rgba(224,32,26,.7)}
-/* .grit (set by JS): speckled, worn spray-paint texture clipped to the letters; drop-shadow keeps the colour fringe without filling the holes */
-.title h1.grit,.title h1.grit em{color:transparent;text-shadow:none;background-repeat:repeat;background-size:220px;-webkit-background-clip:text;background-clip:text}
-.title h1.grit{background-image:var(--grit-bone);filter:drop-shadow(-3px 0 rgba(255,30,30,.45)) drop-shadow(3px 0 rgba(60,200,255,.22))}
-.title h1.grit em{background-image:var(--grit-red)}
+  color:transparent;text-shadow:none;transform-origin:50% 100%; /* neon tube, hollow letters. --on: 0 = unlit glass tube, 1 = lit (pale core + red glow) */
+  -webkit-text-stroke:clamp(2px,.35vw,4px) rgb(calc(92 + 163*var(--on)) calc(66 + 116*var(--on)) calc(60 + 100*var(--on)));
+  filter:brightness(var(--boost)) drop-shadow(0 0 2px rgba(255,90,60,var(--on))) drop-shadow(0 0 8px rgba(255,42,20,var(--on))) drop-shadow(0 0 26px rgba(255,30,10,calc(.8*var(--on)))) drop-shadow(0 0 70px rgba(255,20,0,calc(.45*var(--on))));
+  --on:0;--boost:1} /* unlit until the loading screen lifts, then it stutters on (.lit) */
+@property --on{syntax:'<number>';inherits:false;initial-value:0}
+@property --boost{syntax:'<number>';inherits:false;initial-value:1}
+.title h1.lit{animation:titleIn 4.2s .6s linear both}
+@media (prefers-reduced-motion:reduce){.title h1.lit{animation:none;--on:1}}
+.title h1 em{font-style:normal}
 .tags{margin:0;font-family:var(--f-mono);font-weight:500;font-size:clamp(11px,1.3vw,14px);letter-spacing:.14em;color:var(--dim);animation:fadeUp .8s .5s both}
 .tagline{margin:4px 0 0;font-family:var(--f-mono);font-weight:700;font-size:clamp(17px,2.2vw,24px);letter-spacing:.14em;animation:fadeUp .8s .75s both}
 .dock{width:100%;max-width:560px;display:flex;flex-direction:column;align-items:center;gap:16px;animation:fadeUp .8s 1s both}
 .tip{font-size:13px;line-height:1.7;color:#bdb5aa;word-break:keep-all}
-.tip b{display:inline-block;font-family:var(--f-mono);font-size:11px;letter-spacing:.2em;color:#e0201a;margin-bottom:4px}
+.tip b{display:inline-block;font-family:var(--f-mono);font-size:11px;letter-spacing:.2em;color:var(--ember);margin-bottom:4px}
 .tip p{margin:0}
 .gobox{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
 .go{font:700 16px/1.2 var(--f-body);letter-spacing:.02em;padding:17px 14px;cursor:pointer;border:1px solid var(--bone);transition:background .15s,color .15s,border-color .15s,transform .15s}
 .go.primary{background:var(--bone);color:var(--ink)}
 .go.ghost{background:rgba(0,0,0,.4);color:var(--bone)}
-.go:not(:disabled):hover{background:#e0201a;border-color:#e0201a;color:#fff;transform:translateY(-1px)}
+.go:not(:disabled):hover{background:var(--ember);border-color:var(--ember);color:var(--ink);transform:translateY(-1px)}
 .go:disabled{opacity:.3;cursor:not-allowed}
 /* character picker: gender toggle + 4 looks with rendered thumbnails; entering needs a pick */
 .pick{width:100%;display:flex;flex-direction:column;align-items:center;gap:10px}
@@ -116,7 +120,7 @@ body[data-theme=desert] .hud{text-shadow:0 1px 8px rgba(40,24,8,.7)} /* HUD text
 .look img{width:100%;max-width:150px;aspect-ratio:3/4;object-fit:contain}
 .look i{width:52px;aspect-ratio:3/4;border-radius:40% 40% 8px 8px;display:block;opacity:.75}
 .look:hover{border-color:rgba(236,230,220,.4)}
-.look.on{border-color:#e0201a;background:rgba(224,32,26,.14)}
+.look.on{border-color:var(--ember);background:rgba(255,106,26,.14)}
 .look:focus-visible,.seg button:focus-visible{outline:2px solid var(--ember);outline-offset:2px}
 #pickhint{margin:0;font-size:12px;color:var(--dim)}
 #sndbtn{position:fixed;top:calc(16px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));z-index:12;width:44px;height:44px;display:grid;place-items:center;font-size:20px;line-height:1;border:0;background:none;color:var(--bone);cursor:pointer;transition:transform .15s}
@@ -138,8 +142,8 @@ body[data-theme=desert] .hud{text-shadow:0 1px 8px rgba(40,24,8,.7)} /* HUD text
 .theme h2{margin:0;font-family:var(--f-display);font-weight:900;font-size:clamp(36px,7vw,58px);line-height:.95;letter-spacing:.05em}
 .theme h2,.theme .sub{text-shadow:0 1px 14px rgba(0,0,0,.6)}
 .theme .sub{margin:8px 0 0;font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:#d6cdc1;word-break:keep-all}
-.theme.ready .badge{background:#e0201a;border-color:#e0201a;color:#fff}
-.theme.ready:hover{border-color:#e0201a}
+.theme.ready .badge{background:var(--ember);border-color:var(--ember);color:var(--ink)}
+.theme.ready:hover{border-color:var(--ember)}
 .theme.soon{cursor:default}
 .theme.soon h2{color:rgba(236,230,220,.4)}
 .theme.soon::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 2px,transparent 2px 9px);pointer-events:none}
@@ -148,7 +152,7 @@ body[data-theme=desert] .hud{text-shadow:0 1px 8px rgba(40,24,8,.7)} /* HUD text
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .nav{flex:0 0 auto;width:40px;height:40px;border:1px solid var(--line);background:rgba(0,0,0,.4);color:var(--bone);font-size:22px;line-height:1;cursor:pointer}
 .nav:disabled{opacity:.2;cursor:default}
-.dots{display:flex;gap:7px}.dots i{width:6px;height:6px;border-radius:50%;background:rgba(236,230,220,.25);transition:background .2s}.dots i.on{background:#e0201a}
+.dots{display:flex;gap:7px}.dots i{width:6px;height:6px;border-radius:50%;background:rgba(236,230,220,.25);transition:background .2s}.dots i.on{background:var(--ember)}
 #themehint{margin:0;font-size:12px;color:var(--dim)}
 .chosenbar{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .back{background:none;border:0;color:var(--dim);font:500 12px var(--f-body);cursor:pointer;padding:4px 0}
@@ -167,7 +171,7 @@ body[data-theme=desert] .hud{text-shadow:0 1px 8px rgba(40,24,8,.7)} /* HUD text
   #pickhint{font-size:13px}.go{font-size:18px;padding:19px 14px}.warn{font-size:13px}} /* phones: RAVE fills the width */
 .warn{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim);cursor:pointer}
 .warn b{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;color:var(--ember);margin-right:4px}
-@keyframes titleIn{0%{opacity:0;transform:scale(1.08);filter:blur(10px)}55%{opacity:1;filter:blur(0)}62%{opacity:.55}68%{opacity:1}100%{transform:none}}
+@keyframes titleIn{0%,9%{--on:0}10%,13%{--on:.85}14%,33%{--on:0}34%{--on:.5}35.5%{--on:.1}37%,39%{--on:.7}40%,63%{--on:0}64%{--on:.9}66%{--on:.35}68%{--on:.8}69%,82%{--on:0;--boost:1}83%{--on:1;--boost:2.6}100%{--on:1;--boost:1}} /* three slow, uneven blinks (the dead tube shows in between), then a surge and it holds */
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.title h1,.tags,.tagline,.dock{animation:none}}
 @media (max-width:460px){.gobox{grid-template-columns:1fr}#cam{width:120px}.room b{font-size:24px}.tip br{display:none}}
@@ -211,10 +215,11 @@ body[data-theme=desert] .hud{text-shadow:0 1px 8px rgba(40,24,8,.7)} /* HUD text
 <div id="toast" role="status"></div>
 
 <div id="gate" data-step="theme">
+  <canvas id="fog" aria-hidden="true"></canvas>
   <button id="sndbtn" aria-pressed="false" aria-label="사운드 켜기" title="사운드 켜기">🔇</button>
   <div class="title">
     <h1>RAVE</h1>
-    <p class="tagline">미친 세상의 생존자들</p>
+    <p class="tagline" hidden></p>
   </div>
   <div class="dock">
     <!-- step 1: pick a theme (slide left/right) -->
@@ -260,17 +265,6 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const lerp=(a,b,k)=>a+(b-a)*k;
 const rnd=(a,b)=>a+Math.random()*(b-a);
 
-// landing title texture: base paint + dark/light speckle + punched-out holes and worn streaks
-function grit(base){
-  const S=256,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');
-  x.fillStyle=base;x.fillRect(0,0,S,S);
-  for(let i=0;i<2600;i++){x.fillStyle=Math.random()<.7?`rgba(0,0,0,${Math.random()*.35})`:`rgba(255,255,255,${Math.random()*.08})`;x.fillRect(Math.random()*S,Math.random()*S,rnd(1,2.5),rnd(1,2.5));}
-  x.globalCompositeOperation='destination-out';
-  for(let i=0;i<450;i++){x.fillStyle=`rgba(0,0,0,${.6+Math.random()*.4})`;x.fillRect(Math.random()*S,Math.random()*S,rnd(1,3),rnd(1,3));}
-  for(let i=0;i<9;i++){x.fillStyle='rgba(0,0,0,.85)';x.fillRect(Math.random()*S,Math.random()*S,rnd(1,2.5),rnd(12,44));}
-  return `url(${c.toDataURL()})`;
-}
-{const h=$('.title h1');h.style.setProperty('--grit-bone',grit('#e6dfd2'));h.style.setProperty('--grit-red',grit('#d41c16'));h.classList.add('grit');}
 const BPM=155, SPB=60/BPM;
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let strobeOn=false; $('#strobeChk').checked=strobeOn; // opt-in only: flashes stay off until the player ticks the box
@@ -1238,7 +1232,7 @@ function thumbOf(look){
   const cam=new THREE.PerspectiveCamera(30,180/240,.1,20);cam.position.set(0,1.02,3.7);cam.lookAt(0,.97,0);r.render(s,cam);
   return r.domElement.toDataURL();
 }
-function loaded(){const l=$('#loader');if(!l||l.classList.contains('out'))return;$('#lfill').style.width='100%';l.classList.add('out');setTimeout(()=>l.remove(),800);}
+function loaded(){const l=$('#loader');if(!l||l.classList.contains('out'))return;$('#lfill').style.width='100%';l.classList.add('out');setTimeout(()=>l.remove(),800);$('.title h1').classList.add('lit');}
 setTimeout(loaded,25000); // never trap anyone behind the loading screen on a stalled network
 if(!(THREE.FBXLoader&&THREE.SkeletonUtils))loaded();
 else new THREE.FBXLoader().load('models/mannequin.fbx',tpl=>{
@@ -1607,7 +1601,7 @@ function applyTheme(id){
 /* ---------- step 1: theme carousel ---------- */
 const THEMES=[
   {id:'halle',no:'01',name:'HALLE 01',sub:'#폐 콘크리트 홀 #슈란츠 하드 테크노 155BPM',ready:true,
-   bg:'radial-gradient(55% 60% at 50% 100%,rgba(255,110,30,.55),transparent 70%),radial-gradient(45% 35% at 50% 25%,rgba(224,32,26,.28),transparent 70%),linear-gradient(#1c1411,#070505)'},
+   bg:'radial-gradient(55% 60% at 50% 100%,rgba(255,110,30,.55),transparent 70%),radial-gradient(45% 35% at 50% 25%,rgba(255,106,26,.28),transparent 70%),linear-gradient(#1c1411,#070505)'},
   {id:'desert',no:'02',name:'WÜSTE 02',sub:'#한낮의 사막 #트럭 사운드시스템',ready:true,
    bg:'radial-gradient(22% 38% at 70% 22%,rgba(255,255,245,1),rgba(255,250,220,.5) 45%,transparent 75%),linear-gradient(#0a4ca8 0%,#0894d8 38%,#8ccbea 54%,#d8924a 56%,#b8682a 100%)'},
   {no:'03',name:'Coming Soon',sub:'#베르크하인',bg:'radial-gradient(70% 60% at 50% 100%,rgba(150,160,170,.22),transparent 70%),linear-gradient(#141516,#060606)'},
@@ -1634,7 +1628,7 @@ function pickTheme(i){
 cards.forEach((c,i)=>c.onclick=()=>pickTheme(i));
 function setStep(s){$('#gate').dataset.step=s;
   // character step: the chosen theme takes over the title (big, red) with its hashtags under it; theme step: RAVE again
-  const look=s==='look'&&theme;$('.title h1').innerHTML=look?`<em>${theme.name}</em>`:'RAVE';$('.title .tagline').textContent=look?theme.sub:'미친 세상의 생존자들';$('#stepTheme').hidden=s!=='theme';$('.warn').hidden=!!(look&&theme.id==='desert');$('#stepLook').hidden=s!=='look';if(s==='theme')requestAnimationFrame(syncThemeUI);}
+  const look=s==='look'&&theme;$('.title h1').innerHTML=look?`<em>${theme.name}</em>`:'RAVE';$('.title .tagline').textContent=look?theme.sub:'';$('.title .tagline').hidden=!look;$('#stepTheme').hidden=s!=='theme';$('.warn').hidden=!!(look&&theme.id==='desert');$('#stepLook').hidden=s!=='look';if(s==='theme')requestAnimationFrame(syncThemeUI);}
 $('#backTheme').onclick=()=>setStep('theme');
 addEventListener('keydown',e=>{ // ←/→ slide the themes, Enter picks, while the theme step is up
   if($('#gate').hidden||$('#stepTheme').hidden)return;
@@ -1681,6 +1675,52 @@ $('#sndbtn').onclick=()=>{
   b.title=landingOn?'사운드 끄기':'사운드 켜기';b.setAttribute('aria-label',b.title);
   if(landingOn)landing.play().then(()=>fadeVol(landing,.75,1500)).catch(()=>{});else fadeVol(landing,0,400,()=>landing.pause());
 };
+
+/* ---------- entry: a dark, smoky basement where the only light is the red neon RAVE sign. Its glow bleeds into the
+   drifting smoke and swells faintly with the bass (landing track's kicks once its sound is on) ---------- */
+{
+  const c=$('#fog'),x=c.getContext('2d'),buf=document.createElement('canvas'),b=buf.getContext('2d');
+  // tileable smoke tile: a few octaves of smoothed value noise
+  const N=128,tile=document.createElement('canvas');tile.width=tile.height=N;
+  {const t=tile.getContext('2d'),img=t.createImageData(N,N),acc=new Float32Array(N*N);
+    for(let o=0,g=4,amp=1;o<5;o++,g*=2,amp*=.55){const r=Array.from({length:g*g},Math.random),sm=u=>u*u*(3-2*u);
+      for(let y=0;y<N;y++)for(let xx=0;xx<N;xx++){const fx=xx/N*g,fy=y/N*g,ix=fx|0,iy=fy|0,ux=sm(fx-ix),uy=sm(fy-iy),
+        a=r[iy*g+ix],bb=r[iy*g+(ix+1)%g],cc=r[((iy+1)%g)*g+ix],d=r[((iy+1)%g)*g+(ix+1)%g];
+        acc[y*N+xx]+=amp*((a*(1-ux)+bb*ux)*(1-uy)+(cc*(1-ux)+d*ux)*uy);}}
+    let lo=1e9,hi=-1e9;acc.forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v);});
+    for(let i=0;i<N*N;i++){const v=(acc[i]-lo)/(hi-lo);img.data[i*4]=255;img.data[i*4+1]=150;img.data[i*4+2]=130;img.data[i*4+3]=255*Math.pow(v,1.6);}
+    t.putImageData(img,0,0);}
+  let W=0,H=0,bw=0,bh=0,motes=[],land=null;
+  function size(){const dpr=Math.min(devicePixelRatio,1.5);W=innerWidth;H=innerHeight;c.width=W*dpr;c.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);
+    bw=Math.ceil(W/4);bh=Math.ceil(H/4);buf.width=bw;buf.height=bh; // haze is painted at quarter size and stretched: free softness
+    motes=Array.from({length:Math.round(W*H/14000)},()=>({x:Math.random(),y:Math.random(),v:.004+Math.random()*.01,s:.6+Math.random()*1.2,ph:Math.random()*7}));}
+  size();addEventListener('resize',size);
+  function draw(t,beat){
+    const k=Math.pow(1-(((beat%1)+1)%1),3),bass=.06*k; // a faint swell on the kick, felt more than seen
+    const r=$('.title h1').getBoundingClientRect(),nx=(r.left+r.width/2)/4,ny=(r.top+r.height/2)/4,nr=Math.max(r.width,80)/4;
+    b.globalCompositeOperation='source-over';b.fillStyle='#0b0606';b.fillRect(0,0,bw,bh);
+    const on=clamp(+getComputedStyle($('.title h1')).getPropertyValue('--on')||0,0,1)*(1+bass*2); // glow follows the sign as it blinks on
+    let g=b.createRadialGradient(nx,ny,0,nx,ny,nr*1.6); // neon light spilling onto the smoke around the sign
+    g.addColorStop(0,`rgba(255,45,25,${.42*on})`);g.addColorStop(.45,`rgba(190,25,15,${.18*on})`);g.addColorStop(1,'rgba(90,10,5,0)');
+    b.fillStyle=g;b.fillRect(0,0,bw,bh);
+    b.globalCompositeOperation='screen'; // drifting smoke, three layers at their own scale and speed
+    [[2.2,.012,.004,.13],[3.4,-.008,.006,.1],[1.5,.005,-.003,.08]].forEach(([sc,vx,vy,a])=>{
+      const tw=N*sc*(bw/320),ox=((t*vx*bw)%tw+tw)%tw,oy=((t*vy*bh)%tw+tw)%tw;b.globalAlpha=a;
+      for(let yy=-oy;yy<bh;yy+=tw)for(let xx=-ox;xx<bw;xx+=tw)b.drawImage(tile,xx,yy,tw,tw);});
+    b.globalAlpha=1;b.globalCompositeOperation='multiply'; // smoke only shows where the neon reaches it
+    g=b.createRadialGradient(nx,ny,0,nx,ny,Math.max(bw,bh)*.9);g.addColorStop(0,'#fff');g.addColorStop(.5,'#6a5a58');g.addColorStop(1,'#1a1414');
+    b.fillStyle=g;b.fillRect(0,0,bw,bh);b.globalCompositeOperation='source-over';
+    x.imageSmoothingEnabled=true;x.drawImage(buf,0,0,W,H);
+    x.globalCompositeOperation='lighter'; // dust in the red light
+    motes.forEach(m=>{const mx=m.x*W+8*Math.sin(t*.4+m.ph),y=((m.y+t*m.v)%1)*H,d=Math.hypot(mx/4-nx,y/4-ny)/(nr*2),lit=Math.max(0,1-d)*on;if(lit<=0)return;
+      x.fillStyle=`rgba(255,120,100,${.5*lit*(.6+.4*Math.sin(t*1.3+m.ph))})`;x.fillRect(mx,y,m.s,m.s);});
+    x.globalCompositeOperation='source-over';
+  }
+  const loop=now=>{if($('#gate').hidden)return;const t=now/1000;let beat=t*150/60;
+    if(landingOn&&!landing.paused){if(!land)land=mapBeats(landing.src).then(m=>land=m||{beats:[0],bpm:150});if(land.bpm)beat=(landing.currentTime-land.beats[0])*land.bpm/60;}
+    draw(t,beat);requestAnimationFrame(loop);};
+  if(reduceMotion){const still=()=>draw(0,.5);still();addEventListener('resize',still);}else requestAnimationFrame(loop);
+}
 
 /* ---------- enter ---------- */
 function enter(withMotion){
